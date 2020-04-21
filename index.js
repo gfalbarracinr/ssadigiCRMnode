@@ -19,8 +19,9 @@ let dataJson = XLSX.utils.sheet_to_json(worksheet)
 
 
 let dataNamesCRM = [];
+let arrIndexCompaniesInCRM = [];
 const urlPostCompany = "https://api.hubapi.com/companies/v2/companies?hapikey=1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5"
-
+const urlPostContact = "https://api.hubapi.com/contacts/v1/contact/?hapikey=1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5"
 
 
 
@@ -34,8 +35,8 @@ axios.get('https://api.hubapi.com/companies/v2/companies/paged?hapikey=1c76d9a3-
         
     });
     InsertCompany();
+    InsertContact();
     //console.log(data);
-    
    })
   .catch(function (error) {
     // handle error
@@ -49,7 +50,11 @@ axios.get('https://api.hubapi.com/companies/v2/companies/paged?hapikey=1c76d9a3-
 
 function InsertCompany(){
 
-   
+ // console.log(dataJson[1]["NOMBRE DEL CONTACTO"]);
+ //console.log(dataJson);
+
+
+    
     
     dataJson.forEach(element => {
     
@@ -57,11 +62,7 @@ function InsertCompany(){
         
         let  isIncludedCRM   = dataNamesCRM.includes(companyNameExcel);
 
-        console.log("...........");
-        console.log(dataNamesCRM);
-        console.log(companyNameExcel);
-        console.log(isIncludedCRM);
-        console.log("...........");
+       
 
         
 
@@ -70,20 +71,34 @@ function InsertCompany(){
               {
                 "name": "name",
                 "value": companyNameExcel
-              },
-              {
-                "name": "description",
-                "value": "Computadores por doquier"
               }
+
             ]
           }
         
         if(!isIncludedCRM){
-           
+
+            
+            var index = -1;
+            var val = companyNameExcel
+            var filteredObj = dataJson.find(function(item, i){
+              console.log(item.name);
+              if(item["NOMBRE EMPRESA"] === val){
+               
+                
+                index = i;
+                return i;
+              }
+            });
+
+             
+            arrIndexCompaniesInCRM.push(index);
+
+
             axios.post(urlPostCompany, dataCompany)
 
             .then( (response)=>{
-                console.log(response);
+                //console.log(response);
               
             }).catch((error) =>{
                 console.log(error);
@@ -93,6 +108,38 @@ function InsertCompany(){
     
     });
 }
+
+function InsertContact(){
+
+  dataJson.forEach(element => {
+
+  console.log("****");
+  // hay que  extraer los elementos del arreglo para poder acceder bien a los contactos
+  //console.log(dataJson[element.]["NOMBRE EMPRESA"]);
+  
+  let dataContacts ={
+    "properties": [
+      {
+        "property": "firstname",
+        "value": "isaac"
+      }
+   
+    ]
+  }
+
+  axios.post(urlPostContact, dataContacts)
+
+  .then( (response)=>{
+      //console.log(response);
+    
+  }).catch((error) =>{
+      console.log(error);
+  });
+  
+})
+  
+}
+
 
 
 
