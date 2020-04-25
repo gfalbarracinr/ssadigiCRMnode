@@ -97,7 +97,7 @@ async function crearUnaEmpresa(empresa){
 
 async function postContacts(postUrl,dataContacts){
 
-  console.log("* ",postUrl);
+  console.log("dataContacts",dataContacts);
  
   let res = {};
   try {
@@ -117,7 +117,7 @@ async function crearUnContacto(contacto){
 
   
   let existeElContacto =  elContactoYaEstaEnElCRM(contacto[2]);
-  //console.log("cual es el puto contacto ",contacto);
+  console.log("existe el contacto: ",existeElContacto);
   
   if(!existeElContacto){
 
@@ -210,6 +210,10 @@ function obtenerEmpresaDeUnaFila(element){
 }
 
 function obtenerContactoDeUnaFila(element){
+  
+
+  console.log("entra al metodo");
+  
 
   let dataFilaContacto = []
 
@@ -220,8 +224,7 @@ function obtenerContactoDeUnaFila(element){
 
   //console.log("Esto es lo que debe tener el telefono", element["TELEFONO CONTACTO"] );
   //console.log("***: ",element);
-  
- 
+   
   
   return dataFilaContacto
 }
@@ -238,17 +241,19 @@ function obtenerContactoDeUnaFila(element){
   
   idDeLaEmpresa =  await crearUnaEmpresa(empresa);
 
-  console.log("Este es el id de la empresa ",idDeLaEmpresa);
+  //console.log("Este es el id de la empresa ",idDeLaEmpresa);
   
   
   if(idDeLaEmpresa == -1){
+    console.log("ESTE REGISTRO NO SE PUEDE CREAR, YA EXISTE");
     return;
   }
-  //console.log("Aquí llegó el ID", idDeLaEmpresa);
 
-  //contacto = obtenerContactoDeUnaFila(element);
-  //idDelContacto =  await crearUnContacto(contacto);
-
+  contacto = obtenerContactoDeUnaFila(element);
+  
+  idDelContacto =  await crearUnContacto(contacto);
+  
+  console.log("Este es un contacto ",idDelContacto);
   
   //console.log("Datos del contacto: ", contacto);
   
