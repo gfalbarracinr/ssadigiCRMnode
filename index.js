@@ -68,7 +68,7 @@ async function crearUnaEmpresa(empresa){
           value: empresa[0]
         },
         {
-          name: "description",
+          name: "description",// ESTA ES LA URL DE LA COMPANIA
           value: empresa[1]
         }
   
@@ -115,8 +115,8 @@ async function postContacts(postUrl,dataContacts){
 async function crearUnContacto(contacto){
 
   
-  let existeElContacto =  elContactoYaEstaEnElCRM(contacto[2]);
-  console.log("existe el contacto: ",existeElContacto);
+  let existeElContacto =  await elContactoYaEstaEnElCRM(contacto[2]);
+  //console.log("existe el contacto: ",existeElContacto);
   
   if(!existeElContacto){
 
@@ -174,6 +174,10 @@ async function laEmpresaYaEstaEnElCRM(empresa){
   
       let  isIncludedCRM   = companiesFromCRM.includes(empresa);   
       respuesta = isIncludedCRM;
+      
+      //console.log("companiesFromCRM: ",companiesFromCRM);
+      //console.log("respuesta company in crm: ",respuesta);
+      
 
     return respuesta;
 }
@@ -187,7 +191,7 @@ async function getContactsCRM(){
 
 
 
-function elContactoYaEstaEnElCRM(contacto){
+async function elContactoYaEstaEnElCRM(contacto){
 
     let  contactisIncludedCRM   = contactsFromCRM.includes(contacto);   
     respuesta = contactisIncludedCRM;
@@ -197,7 +201,7 @@ function elContactoYaEstaEnElCRM(contacto){
 
 
  
-function obtenerEmpresaDeUnaFila(element){
+async function obtenerEmpresaDeUnaFila(element){
 
   let dataFilaCompania = []
 
@@ -208,10 +212,10 @@ function obtenerEmpresaDeUnaFila(element){
   return dataFilaCompania
 }
 
-function obtenerContactoDeUnaFila(element){
+async function obtenerContactoDeUnaFila(element){
   
 
-  console.log("entra al metodo");
+ //console.log("entra al metodo");
   
 
   let dataFilaContacto = []
@@ -245,7 +249,6 @@ async function putContactIntoCompany(urlUnionContactCompany,datacontactCompany){
 
 async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto){
   
-  
 
   const urlUnionContactCompany = "https://api.hubapi.com/crm-associations/v1/associations?hapikey=1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5"
     
@@ -256,49 +259,68 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
       category: "HUBSPOT_DEFINED",
       definitionId: 1
   }
+
+  let datacontactCompany2 = {
+
+    fromObjectId: idDeLaEmpresa,
+    toObjectId:idDelContacto,
+    category: "HUBSPOT_DEFINED",
+    definitionId: 2
+}
   
   responsePutUnion = await putContactIntoCompany(urlUnionContactCompany,datacontactCompany)
+  responsePutUnion2 = await putContactIntoCompany(urlUnionContactCompany,datacontactCompany2)
+
+  return responsePutUnion, responsePutUnion2;
   
 }
 
 
- function recorrerUnExcel(dataJson){
+ async function recorrerUnExcel(dataJson){
       
-  dataJson.forEach( async function (element)  {
-
-   
-  empresa = obtenerEmpresaDeUnaFila(element);
+  // dataJson.forEach( async function (element)  {
+  for (const element of dataJson) {
+    
   
+   
+  empresa = await obtenerEmpresaDeUnaFila(element);
+  console.log("ESTA ES LA EMPRESA: ",empresa);
+  console.log("SIGUE");
+  
+
   //console.log("Esta es la empresa que se añadirá ",empresa);
   
   idDeLaEmpresa =  await crearUnaEmpresa(empresa);
-
-  //console.log("Este es el id de la empresa ",idDeLaEmpresa);
+  console.log("ESTE ES EL ID DE LA EMPRESA: ",idDeLaEmpresa);
   
+  //console.log("Este es el id de la empresa ",idDeLaEmpresa);
   
   if(idDeLaEmpresa == -1){
     console.log("ESTE REGISTRO NO SE PUEDE CREAR, YA EXISTE");
     return;
   }
 
-  contacto = obtenerContactoDeUnaFila(element);
-  
+  contacto = await obtenerContactoDeUnaFila(element);
+  //console.log("ESTE ES EL CONTACTO: ",contacto);
+
+
   idDelContacto =  await crearUnContacto(contacto);
+  //console.log("ESTE ES EL ID DEL CONTACTO: ",idDelContacto);
 
   if(idDelContacto != -1){
-
-    
-
-  resultAsociation = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
-
+   let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
   }
+  //console.log("IDEMPRESA, IDCONTACTO: ",idDeLaEmpresa,idDelContacto);
   
-  console.log("Este es un contacto ",idDelContacto);
+    console.log("PASÓ POR ACÁ");
+    
+  
+  //console.log("Este es un contacto ",idDelContacto);
   
   //console.log("Datos del contacto: ", contacto);
   
   
-});
+}
 }
 
 async function main(){
@@ -312,10 +334,10 @@ async function main(){
    await getDataFromCRM();
 
   //console.log(dataJson);
+  recorrerUnExcel(dataJson);
   
   
 
-  recorrerUnExcel(dataJson);
 
 }
 
@@ -327,7 +349,7 @@ app.get('/', function (req, res) {
   res.send("Boom");
  
 });
-app.listen(4001, function () {
+app.listen(4000, function () {
   console.log('Example app listening on port 4000!');
 });
 // END configuration server
