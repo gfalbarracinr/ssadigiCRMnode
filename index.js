@@ -97,8 +97,7 @@ async function crearUnaEmpresa(empresa){
 
 async function postContacts(postUrl,dataContacts){
 
-  console.log("dataContacts",dataContacts);
- 
+   
   let res = {};
   try {
     
@@ -147,8 +146,8 @@ async function crearUnContacto(contacto){
      
 
       let dataPostContacts  = await postContacts(urlPostContact, dataContacts);
-      let idContactoCreado = dataPostContacts.data;
-
+      let idContactoCreado = dataPostContacts.data.vid;
+       
     
      
 		return idContactoCreado;
@@ -229,6 +228,39 @@ function obtenerContactoDeUnaFila(element){
   return dataFilaContacto
 }
 
+async function putContactIntoCompany(urlUnionContactCompany,datacontactCompany){
+  
+  let res = {};
+  try {
+    
+     res = await axios.put(urlUnionContactCompany,datacontactCompany);
+    
+  } catch (error) {
+    console.log("Error al hacer la unión entre contacto y empresa", error.message);
+    
+  }
+
+  return res;
+}
+
+async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto){
+  
+  
+
+  const urlUnionContactCompany = "https://api.hubapi.com/crm-associations/v1/associations?hapikey=1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5"
+    
+  let datacontactCompany = {
+
+      fromObjectId:  idDelContacto,
+      toObjectId: idDeLaEmpresa,
+      category: "HUBSPOT_DEFINED",
+      definitionId: 1
+  }
+  
+  responsePutUnion = await putContactIntoCompany(urlUnionContactCompany,datacontactCompany)
+  
+}
+
 
  function recorrerUnExcel(dataJson){
       
@@ -252,6 +284,14 @@ function obtenerContactoDeUnaFila(element){
   contacto = obtenerContactoDeUnaFila(element);
   
   idDelContacto =  await crearUnContacto(contacto);
+
+  if(idDelContacto != -1){
+
+    
+
+  resultAsociation = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
+
+  }
   
   console.log("Este es un contacto ",idDelContacto);
   
