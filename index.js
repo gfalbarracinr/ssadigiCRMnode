@@ -177,7 +177,7 @@ async function putContactIntoCompany(urlUnionContactCompany,datacontactCompany){
      res = await axios.put(urlUnionContactCompany,datacontactCompany);
   } catch (error) {
     let message = error.message;
-    errorCollector.add(errorCollector.currentLine, message);
+    errorCollector.add(currentLine, message);
     console.log("Error al hacer la unión entre contacto y empresa", message);
   }
   return res;
