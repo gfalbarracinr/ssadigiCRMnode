@@ -14,20 +14,20 @@ var currentLine = 0;
 
 async function getDataFromCRM() {
 
-   await getCompaniesCRM().then(responseCompanies=>{
-    responseCompanies.data.companies.forEach(element => {
+   await getCompaniesCRM().then(responseCompanies => {
+     for(element of responseCompanies.data.companies) {
       companiesFromCRM.push(element.properties.name.value);
-    })
+    }
   }).catch(function (error) {
     let message = error.message;
     errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message);
     console.log("getCompaniesCRM ", message);
   })
   
-  await getContactsCRM().then(responseContacts=>{
-    responseContacts.data.contacts.forEach(element => {
+  await getContactsCRM().then(responseContacts => {
+    for(element of responseContacts.data.contacts) {
       contactsFromCRM.push(element["identity-profiles"][0].identities[0].value);
-    })
+    }
   }).catch(function (error) {
     let message = error.message;
     errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message);
@@ -95,7 +95,7 @@ async function postContacts(postUrl,dataContacts){
 
 async function crearUnContacto(contacto){
   let idContactoCreado = -1;
-  let existeElContacto =  await elContactoYaEstaEnElCRM(contacto[2]);
+  let existeElContacto =  await elContactoYaEstaEnElCRM(contacto[3]);
   if(!existeElContacto) {
     const urlPostContact = `https://api.hubapi.com/contacts/v1/contact/?hapikey=${apikey}`
     let dataContacts = {
@@ -116,11 +116,10 @@ async function crearUnContacto(contacto){
         }
       ]
     }
-
-    
     try {
       let dataPostContacts  = await postContacts(urlPostContact, dataContacts);
-      idContactoCreado = dataPostContacts.data.vid;     
+      idContactoCreado = dataPostContacts.data.vid;
+      console.log("dataPostContact respuesta: ", dataPostContacts.data.vid);     
     }
     catch(error) {
       console.log("linea actual", currentLine);
@@ -148,7 +147,11 @@ async function getContactsCRM(){
 }
 
 async function elContactoYaEstaEnElCRM(contacto){
-  if (contacto === undefined) return true;
+
+  console.log("este es el arreglo en donde algo debe estar mal: ", {contacto: contacto, contactsFromCRM: contactsFromCRM});
+  if (contacto === 'undefined'){
+   return true;
+  }
   let contactisIncludedCRM = contactsFromCRM.includes(contacto);   
   respuesta = contactisIncludedCRM;
   return respuesta;
@@ -156,18 +159,21 @@ async function elContactoYaEstaEnElCRM(contacto){
 
 async function obtenerEmpresaDeUnaFila(element){
   let dataFilaCompania = []
-  dataFilaCompania.push(element["NOMBRE EMPRESA"]);
-  dataFilaCompania.push(element["PAGINA WEB"]);
-  dataFilaCompania.push(element["INDUSTRIA"]);
+
+  dataFilaCompania.push(String(element["NOMBRE EMPRESA"]));
+  dataFilaCompania.push(String(element["PAGINA WEB"]));
+  dataFilaCompania.push(String(element["INDUSTRIA"]));
+
   return dataFilaCompania
 }
 
 async function obtenerContactoDeUnaFila(element){
   let dataFilaContacto = []
-  dataFilaContacto.push(element["PRIMER NOMBRE"]);
-  dataFilaContacto.push(element["SEGUNDO NOMBRE"]);
-  dataFilaContacto.push(element["TELEFONO DE CONTACTO"]);
-  dataFilaContacto.push(element["EMAIL CONTACTO"]);
+
+  dataFilaContacto.push(String(element["PRIMER NOMBRE"]));
+  dataFilaContacto.push(String(element["SEGUNDO NOMBRE"]));
+  dataFilaContacto.push(String(element["TELEFONO DE CONTACTO"]));
+  dataFilaContacto.push(String(element["EMAIL CONTACTO"]));
   return dataFilaContacto
 }
 
@@ -206,6 +212,72 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
   
 }
 
+
+async function postDeal(dataDeal){
+
+  const urlPostDeal = `https://api.hubapi.com/deals/v1/deal?hapikey=${apikey}`
+    
+  let res = {};
+  try {
+    
+     res = await axios.post(urlPostDeal,dataDeal);
+    
+  } catch (error) {
+    console.log("Error al hacer la unión entre contacto y empresa", error.message);
+    
+  }
+
+  return res;
+
+}
+
+async function crearDealSinContacto(idDeLaEmpresa, empresa){
+  let dataDeal = {
+    associations: {
+      associatedCompanyIds: [
+        idDeLaEmpresa
+      ]
+    },
+    properties: [
+         {
+          value: empresa,
+          name: "dealname"
+        },
+      {
+        value: "appointmentscheduled",
+        name: "dealstage"
+      }
+      ]
+  }
+  responsePosDeal = await postDeal(dataDeal)
+  return responsePosDeal;
+}
+async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa){
+  let dataDeal = {
+    associations: {
+      associatedCompanyIds: [
+        idDeLaEmpresa
+      ],
+      associatedVids: [
+        idContactoDeal
+      ]
+    },
+    properties: [
+         {
+          value: empresa,
+          name: "dealname"
+        },
+      {
+        value: "appointmentscheduled",
+        name: "dealstage"
+      }
+      ]
+  }
+  responsePosDeal = await postDeal(dataDeal)
+  return responsePosDeal;
+}
+
+
  async function recorrerUnExcel(dataJson){
   for (const element of dataJson) {
     currentLine++;
@@ -218,11 +290,14 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
     }
     contacto = await obtenerContactoDeUnaFila(element);
     idDelContacto =  await crearUnContacto(contacto);
-    if(idDelContacto != -1){
+    if(idDelContacto !== -1) {
       let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
+      let rtaDeal = await crearDealConContacto(idDeLaEmpresa, idDelContacto, empresa[0]);
     } else {
       errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto");
+      let rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0]);
     }
+
   }
   console.log(errorCollector.toStringArray())
 }
