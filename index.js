@@ -104,7 +104,7 @@ async function postContacts(postUrl,dataContacts){
      res = await axios.post(postUrl,dataContacts);
     
   } catch (error) {
-    console.log("ERROR AL CREAR UN CONTACTO ", error.message);
+    console.log("ERROR AL CREAR UN CONTACTO ", error);
     
   }
 
@@ -115,8 +115,9 @@ async function postContacts(postUrl,dataContacts){
 async function crearUnContacto(contacto){
 
   
-  let existeElContacto =  await elContactoYaEstaEnElCRM(contacto[2]);
-  //console.log("existe el contacto: ",existeElContacto);
+  let existeElContacto =  await elContactoYaEstaEnElCRM(contacto[3]);
+
+  console.log("existe el contacto: ",existeElContacto);
   
   if(!existeElContacto){
 
@@ -143,6 +144,7 @@ async function crearUnContacto(contacto){
       ]
     }
 
+     console.log("Este es el valor del contacto: ",typeof(contacto[2]));
      
 
       let dataPostContacts  = await postContacts(urlPostContact, dataContacts);
@@ -192,10 +194,25 @@ async function getContactsCRM(){
 
 
 async function elContactoYaEstaEnElCRM(contacto){
+  
+  console.log("Este es el contacto*",contacto);
+  let respuesta  = false;
+ 
+  if (contacto === undefined) {
 
+    console.log("Entra acá,contacto undefined");
+    
+    respuesta = true;
+
+  }else{
+ 
     let  contactisIncludedCRM   = contactsFromCRM.includes(contacto);   
     respuesta = contactisIncludedCRM;
  
+  }
+  console.log("Esta es la respuestaaa",respuesta);
+  
+    
   return respuesta;
 }
 
@@ -205,9 +222,9 @@ async function obtenerEmpresaDeUnaFila(element){
 
   let dataFilaCompania = []
 
-  dataFilaCompania.push(element["NOMBRE EMPRESA"]);
-  dataFilaCompania.push(element["PAGINA WEB"]);
-  dataFilaCompania.push(element["INDUSTRIA"]);
+  dataFilaCompania.push(String(element["NOMBRE EMPRESA"]));
+  dataFilaCompania.push(String(element["PAGINA WEB"]));
+  dataFilaCompania.push(String(element["INDUSTRIA"]));
 
   return dataFilaCompania
 }
@@ -220,10 +237,10 @@ async function obtenerContactoDeUnaFila(element){
 
   let dataFilaContacto = []
 
-  dataFilaContacto.push(element["PRIMER NOMBRE"]);
-  dataFilaContacto.push(element["SEGUNDO NOMBRE"]);
-  dataFilaContacto.push(element["TELEFONO DE CONTACTO"]);
-  dataFilaContacto.push(element["EMAIL CONTACTO"]);
+  dataFilaContacto.push(String(element["PRIMER NOMBRE"]));
+  dataFilaContacto.push(String(element["SEGUNDO NOMBRE"]));
+  dataFilaContacto.push(String(element["TELEFONO DE CONTACTO"]));
+  dataFilaContacto.push(String(element["EMAIL CONTACTO"]));
 
   //console.log("Esto es lo que debe tener el telefono", element["TELEFONO CONTACTO"] );
   //console.log("***: ",element);
@@ -276,6 +293,64 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
 }
 
 
+async function postDeal(dataDeal){
+
+  const urlPostDeal = "https://api.hubapi.com/deals/v1/deal?hapikey=1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5"
+    
+  let res = {};
+  try {
+    
+     res = await axios.post(urlPostDeal,dataDeal);
+    
+  } catch (error) {
+    console.log("Error al hacer la unión entre contacto y empresa", error.message);
+    
+  }
+
+  return res;
+
+}
+
+async function crearDeal(idDeLaEmpresa, idContactoDeal, empresa){
+
+  let dataDeal = {
+    associations: {
+      associatedCompanyIds: [
+        idDeLaEmpresa
+      ],
+      associatedVids: [
+
+        idContactoDeal
+      ]
+        
+    },
+    properties: [
+      
+         {
+          value: empresa,
+          name: "dealname"
+        },
+      {
+        value: "appointmentscheduled",
+        name: "dealstage"
+      }
+      
+      ]
+  }
+  console.log("La data del deal: ",dataDeal);
+  
+  
+  responsePosDeal = await postDeal(dataDeal)
+  
+  
+
+  return responsePosDeal;
+
+
+
+}
+
+
  async function recorrerUnExcel(dataJson){
       
   // dataJson.forEach( async function (element)  {
@@ -297,7 +372,7 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
   
   if(idDeLaEmpresa == -1){
     console.log("ESTE REGISTRO NO SE PUEDE CREAR, YA EXISTE");
-    return;
+    continue;
   }
 
   contacto = await obtenerContactoDeUnaFila(element);
@@ -305,16 +380,24 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
 
 
   idDelContacto =  await crearUnContacto(contacto);
-  //console.log("ESTE ES EL ID DEL CONTACTO: ",idDelContacto);
+  //console.log("E STE ES EL ID DEL CONTACTO: ",idDelContacto);
 
   if(idDelContacto != -1){
-   let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
+  
+    let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
+   let rtaDeal = await crearDeal(idDeLaEmpresa, idDelContacto, empresa[0]);
+  
+  }else{
+    
+    let rtaDeal = await crearDeal(idDeLaEmpresa, "", empresa[0]);
+
   }
   //console.log("IDEMPRESA, IDCONTACTO: ",idDeLaEmpresa,idDelContacto);
   
     console.log("PASÓ POR ACÁ");
     
-  
+   //console.log("Esta es la respuesta del deal ",rtaDeal);
+   
   //console.log("Este es un contacto ",idDelContacto);
   
   //console.log("Datos del contacto: ", contacto);
@@ -335,9 +418,6 @@ async function main(){
 
   //console.log(dataJson);
   recorrerUnExcel(dataJson);
-  
-  
-
 
 }
 
