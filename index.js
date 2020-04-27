@@ -6,7 +6,7 @@ const app = express();
 const cors = require("cors");
 app.use(cors());
 
-const apikey = `1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5`;
+const apikey = `22b4e662-5580-4547-bb80-b248d73cd10b`;
 var companiesFromCRM = [];
 var contactsFromCRM = [];
 const errorCollector = new ErrorRecolector();
@@ -62,13 +62,13 @@ async function crearUnaEmpresa(empresa){
           value: empresa[0]
         },
         {
-          name: "website",// 
+          name: "website",
           value: empresa[1]
         },
         {
-          name: "description",// 
+          name: "industry", 
           value: empresa[2]
-        }      
+        }            
       ]
     }
     try{
@@ -123,10 +123,8 @@ async function crearUnContacto(contacto){
     try {
       let dataPostContacts  = await postContacts(urlPostContact, dataContacts);
       idContactoCreado = dataPostContacts.data.vid;
-      console.log("dataPostContact respuesta: ", dataPostContacts.data.vid);
     }
     catch(error) {
-      console.log("linea actual", currentLine);
       console.log("error al crear un contacto: ", error.message);
       errorCollector.add(currentLine, error.message);
     };
@@ -168,7 +166,7 @@ async function obtenerEmpresaDeUnaFila(element){
   dataFilaCompania.push(String(element["NOMBRE EMPRESA"]));
   dataFilaCompania.push(String(element["PAGINA WEB"]));
   dataFilaCompania.push(String(element["INDUSTRIA"]));
-
+  dataFilaCompania.push(String(element["PAIS"]));
   return dataFilaCompania
 }
 
@@ -186,7 +184,7 @@ async function ObtenerDataDealFilaExcel(element){
   let dataFilaDeal = []
 
   dataFilaDeal.push(String(element["VALOR DEAL"]));
-  dataFilaDeal.push(String(element["DEAL OWNER"]));
+  dataFilaDeal.push(String(element["DEAL OWNER ID"]));
   dataFilaDeal.push(String(element["PRODUCTO"]));
   return dataFilaDeal
 }
@@ -268,6 +266,10 @@ async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
         {
           value: datosDelDeal[0],
           name: "amount"
+        },
+        {
+          value: datosDelDeal[1],
+          name: "hubspot_owner_id"
         }
       ]
   }
@@ -300,7 +302,11 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
       {
         value: datosDelDeal[0],
         name: "amount"
-      }
+      },
+      {
+        value: datosDelDeal[1],
+        name: "hubspot_owner_id"
+      },
       ]
   }
   responsePosDeal = await postDeal(dataDeal)
@@ -311,6 +317,7 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
  async function recorrerUnExcel(dataJson){
   for (const element of dataJson) {
     currentLine++;
+    if (dataJson["DEAL OWNER ID"] === '') continue;
     empresa = await obtenerEmpresaDeUnaFila(element);
     datosDelDeal = await ObtenerDataDealFilaExcel(element);
 
@@ -327,7 +334,7 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
       let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
       let rtaDeal = await crearDealConContacto(idDeLaEmpresa, idDelContacto, empresa[0],datosDelDeal);
     } else {
-      errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto");
+      errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto a introducir");
       let rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0],datosDelDeal);
     }
 
@@ -340,7 +347,7 @@ async function main(){
   let workbook = XLSX.readFile('file.xlsx');
   let first_sheet_name = workbook.SheetNames[0];
   let worksheet = workbook.Sheets[first_sheet_name];
-  let dataJson = XLSX.utils.sheet_to_json(worksheet)
+  let dataJson = XLSX.utils.sheet_to_json(worksheet);
   await getDataFromCRM();
   recorrerUnExcel(dataJson);
 }
