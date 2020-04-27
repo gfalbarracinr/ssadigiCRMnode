@@ -1,9 +1,13 @@
 const express = require('express');
+const path = require('path');
+const multer  = require('multer')
 const XLSX = require('xlsx')
 const axios = require('axios');
 const ErrorRecolector = require('./ErrorCollector.js');
 const app = express();
 const cors = require("cors");
+const bodyParser= require('body-parser');
+app.use(bodyParser.urlencoded({extended: true}))
 app.use(cors());
 
 const apikey = `22b4e662-5580-4547-bb80-b248d73cd10b`;
@@ -11,6 +15,9 @@ var companiesFromCRM = [];
 var contactsFromCRM = [];
 const errorCollector = new ErrorRecolector();
 var currentLine = 0;
+var upload = multer()
+
+
 
 async function getDataFromCRM() {
 
@@ -342,19 +349,27 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
   console.log(errorCollector.toStringArray())
 }
 
-async function main(){
+async function main(file){
 
-  let workbook = XLSX.readFile('file.xlsx');
+  let workbook = XLSX.read(file, {type: "buffer"});
   let first_sheet_name = workbook.SheetNames[0];
   let worksheet = workbook.Sheets[first_sheet_name];
   let dataJson = XLSX.utils.sheet_to_json(worksheet);
   await getDataFromCRM();
   recorrerUnExcel(dataJson);
 }
-main();
+//main();
+
 app.get('/', function (req, res) {
-  res.send("Boom"); 
+  res.sendFile(path.join(__dirname+'/index.html')); 
 });
+
+ 
+app.post('/upload', upload.single('file'), function (req, res, next) {
+   main(req.file.buffer);
+   res.send("OK")
+})
+
 
 app.listen(4000, function () {
   console.log('Example app listening on port 4000!');
