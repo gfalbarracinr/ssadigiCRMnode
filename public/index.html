@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="./index.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>ssadigi import data</title>
+</head>
+<body class="container-fluid">  
+
+
+    <div class="card mx-auto" style="width: 400px">
+        <div class="card-body">
+            <img class="card-img-top" src="./ssadigi.png" alt="ssadigi logo">
+          <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input class=" btn btn-light mt-2 mb-3" type="file"  accept=".xls, .xlsx" name="file" />
+            <input class="btnEnviar"  type= "submit" value="Enviar" />
+          </form>
+          <p class="card-text mt-5">Aquí irán algunos errores</p>
+        </div>
+    </div>
+ 
+
+</body>
+</html>

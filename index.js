@@ -10,13 +10,13 @@ const bodyParser= require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(cors());
 
-const apikey = `22b4e662-5580-4547-bb80-b248d73cd10b`;
+const apikey = `1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5`;
 var companiesFromCRM = [];
 var contactsFromCRM = [];
 const errorCollector = new ErrorRecolector();
 var currentLine = 0;
 var upload = multer()
-
+var errores ="";
 
 
 async function getDataFromCRM() {
@@ -59,6 +59,8 @@ async function postCompanies(postUrl,dataCompany){
 
 async function crearUnaEmpresa(empresa){
   let existelaCompania = await laEmpresaYaEstaEnElCRM(empresa[0]);
+  console.log(existelaCompania);
+  
   let dataPostCompaniasId = -1;
   if(!existelaCompania){
     const urlPostCompany = `https://api.hubapi.com/companies/v2/companies?hapikey=${apikey}`;
@@ -75,12 +77,18 @@ async function crearUnaEmpresa(empresa){
         {
           name: "industry", 
           value: empresa[2]
-        }            
+        },
+        {
+          name: "state", 
+          value: empresa[3]
+        }                  
       ]
     }
     try{
       dataPostCompanias  = await postCompanies(urlPostCompany, dataCompany);    
       dataPostCompaniasId = dataPostCompanias.data.companyId;
+      console.log("WWWWWWW",dataPostCompaniasId);
+      
       return dataPostCompaniasId;
     } catch(error) {
       console.log("Error al crear una compañia ", error.message);
@@ -193,6 +201,7 @@ async function ObtenerDataDealFilaExcel(element){
   dataFilaDeal.push(String(element["VALOR DEAL"]));
   dataFilaDeal.push(String(element["DEAL OWNER ID"]));
   dataFilaDeal.push(String(element["PRODUCTO"]));
+  dataFilaDeal.push(String(element["PAIS"]));
   return dataFilaDeal
 }
 
@@ -252,7 +261,7 @@ async function postDeal(dataDeal){
 
 async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
 
-  let totalNameDeal = empresa +"_"+datosDelDeal[2];
+  let totalNameDeal = empresa +"_"+datosDelDeal[3];
 
   
   let dataDeal = {
@@ -274,10 +283,6 @@ async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
           value: datosDelDeal[0],
           name: "amount"
         },
-        {
-          value: datosDelDeal[1],
-          name: "hubspot_owner_id"
-        }
       ]
   }
   responsePosDeal = await postDeal(dataDeal)
@@ -286,7 +291,7 @@ async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
 async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datosDelDeal){
 
   
-  let totalNameDeal = empresa +"_"+datosDelDeal[2];
+  let totalNameDeal = empresa +"_"+datosDelDeal[2]+datosDelDeal[4];
 
   let dataDeal = {
     associations: {
@@ -310,10 +315,7 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
         value: datosDelDeal[0],
         name: "amount"
       },
-      {
-        value: datosDelDeal[1],
-        name: "hubspot_owner_id"
-      },
+     
       ]
   }
   responsePosDeal = await postDeal(dataDeal)
@@ -346,7 +348,10 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
     }
 
   }
-  console.log(errorCollector.toStringArray())
+  console.log(typeof(String(errorCollector.toStringArray())))
+  errores = String(errorCollector.toStringArray());
+  console.log(errores);
+  
 }
 
 async function main(file){
@@ -361,15 +366,16 @@ async function main(file){
 //main();
 
 app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname+'/index.html')); 
+  res.sendFile(path.join(__dirname+'/public/index.html')); 
 });
 
  
 app.post('/upload', upload.single('file'), function (req, res, next) {
    main(req.file.buffer);
-   res.send("OK")
+   res.send("Datos enviados satisfactoriamente");
 })
 
+app.use(express.static(__dirname + '/public'));
 
 app.listen(4000, function () {
   console.log('Example app listening on port 4000!');
