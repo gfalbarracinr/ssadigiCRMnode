@@ -261,7 +261,7 @@ async function postDeal(dataDeal){
 
 async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
 
-  let totalNameDeal = empresa +"_"+datosDelDeal[3];
+  let totalNameDeal = empresa +"_"+datosDelDeal[2]+"_"+datosDelDeal[3];
 
   
   let dataDeal = {
@@ -283,6 +283,10 @@ async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
           value: datosDelDeal[0],
           name: "amount"
         },
+              {
+          value: datosDelDeal[1],
+          name: "hubspot_owner_id"
+        }
       ]
   }
   responsePosDeal = await postDeal(dataDeal)
@@ -291,8 +295,9 @@ async function crearDealSinContacto(idDeLaEmpresa, empresa,datosDelDeal){
 async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datosDelDeal){
 
   
-  let totalNameDeal = empresa +"_"+datosDelDeal[2]+datosDelDeal[4];
-
+  let totalNameDeal = empresa +"_"+datosDelDeal[2]+"_"+datosDelDeal[3];
+  console.log("debe imprimir pais",datosDelDeal[3]);
+  
   let dataDeal = {
     associations: {
       associatedCompanyIds: [
