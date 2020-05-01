@@ -87,7 +87,6 @@ async function crearUnaEmpresa(empresa){
     try{
       dataPostCompanias  = await postCompanies(urlPostCompany, dataCompany);    
       dataPostCompaniasId = dataPostCompanias.data.companyId;
-      console.log("WWWWWWW",dataPostCompaniasId);
       
       return dataPostCompaniasId;
     } catch(error) {
@@ -202,6 +201,8 @@ async function ObtenerDataDealFilaExcel(element){
   dataFilaDeal.push(String(element["DEAL OWNER ID"]));
   dataFilaDeal.push(String(element["PRODUCTO"]));
   dataFilaDeal.push(String(element["PAIS"]));
+  dataFilaDeal.push(String(element["NOTA"]));
+
   return dataFilaDeal
 }
 
@@ -296,7 +297,6 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
 
   
   let totalNameDeal = empresa +"_"+datosDelDeal[2]+"_"+datosDelDeal[3];
-  console.log("debe imprimir pais",datosDelDeal[3]);
   
   let dataDeal = {
     associations: {
@@ -320,11 +320,115 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
         value: datosDelDeal[0],
         name: "amount"
       },
+      {
+        value: datosDelDeal[1],
+        name: "hubspot_owner_id"
+      }
      
       ]
   }
   responsePosDeal = await postDeal(dataDeal)
   return responsePosDeal;
+}
+
+async function createNote(datosDelDeal, dealId){
+
+   
+  let dataCreateNote ={
+    "engagement": {
+        "active": true,
+        "ownerId": datosDelDeal[1],
+        "type": "NOTE"
+    },
+    "associations": {
+        "contactIds": [],
+        "companyIds": [ ],
+        "dealIds": [dealId],
+        "ownerIds": [ ]
+    },
+    "metadata": {
+        "body": datosDelDeal[4]
+    }
+}
+
+  responseCreateNote = await postCreateNote(dataCreateNote)
+
+  return responseCreateNote;
+  
+}
+
+const TWO_WEEKS_TIMESTAMP = 12096e5;
+async function createTask(datosDelDeal, dealId){
+
+  var currentDate = new Date();
+  var timestamp = currentDate.getTime();
+
+   
+  let dataCreateTask ={
+    "engagement": {
+        "active": true,
+        "ownerId": datosDelDeal[1],
+        "type": "TASK",
+        "timestamp": timestamp + TWO_WEEKS_TIMESTAMP
+    },
+    "associations": {
+        "contactIds": [],
+        "companyIds": [],
+        "dealIds": [dealId],
+        "ownerIds": []
+    },
+  "metadata": {
+    "body": "This is the body of the task.",
+    "subject": "Recordatorio de llamada",
+    "status": "NOT_STARTED"
+  }
+}
+
+
+ 
+
+  responseCreateTask = await postCreateTask(dataCreateTask)
+
+  return responseCreateTask;
+  
+}
+
+
+async function postCreateTask(dataTask){
+
+  const urlPostCreateTask = `https://api.hubapi.com/engagements/v1/engagements?hapikey=${apikey}`; 
+  
+  let res = {};
+  try {
+    
+     res = await axios.post(urlPostCreateTask,dataTask);
+    
+  } catch (error) {
+    console.log("Error al  crear una tarea", error.message);
+    
+  }
+
+  return res;
+
+}
+
+
+async function postCreateNote(dataNote){
+
+  const urlPostCreateNote = `https://api.hubapi.com/engagements/v1/engagements?hapikey=${apikey}`; 
+     
+  let res = {};
+  try {
+    
+     res = await axios.post(urlPostCreateNote,dataNote);
+    
+  } catch (error) {
+    console.log("Error al crear una nota", error.message);
+    
+  }
+
+  return res;
+
 }
 
 
@@ -347,9 +451,17 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
     if(idDelContacto !== -1) {
       let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
       let rtaDeal = await crearDealConContacto(idDeLaEmpresa, idDelContacto, empresa[0],datosDelDeal);
+      let dealId = rtaDeal.data.dealId;
+      let responseCreateANote = await createNote(datosDelDeal, dealId);      
+      let responseCreateTask = await createTask(datosDelDeal, dealId); 
+      
     } else {
       errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto a introducir");
       let rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0],datosDelDeal);
+      let dealId = rtaDeal.data.dealId;
+      let responseCreateANote = await createNote(datosDelDeal, dealId);
+      let responseCreateTask = await createTask(datosDelDeal, dealId); 
+        
     }
 
   }
