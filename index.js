@@ -1,9 +1,10 @@
 const express = require('express');
+const basicAuth = require('express-basic-auth')
 const path = require('path');
 const multer  = require('multer')
 const XLSX = require('xlsx')
 const axios = require('axios');
-const ErrorRecolector = require('./ErrorCollector.js');
+const ErrorCollector = require('./ErrorCollector.js');
 const app = express();
 const cors = require("cors");
 const bodyParser= require('body-parser');
@@ -11,12 +12,12 @@ app.use(bodyParser.urlencoded({extended: true}))
 app.use(cors());
 
 const apikey = `1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5`;
-var companiesFromCRM = [];
-var contactsFromCRM = [];
-const errorCollector = new ErrorRecolector();
-var currentLine = 0;
+
+ 
+
+
 var upload = multer()
-var errores ="";
+
 
 
 async function getDataFromCRM() {
@@ -27,7 +28,7 @@ async function getDataFromCRM() {
   }
   }).catch(function (error) {
     let message = error.message;
-    errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message);
+    errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message, ErrorCollector.ERROR_CODE());
     console.log("getCompaniesCRM ", message);
   })
   
@@ -37,7 +38,7 @@ async function getDataFromCRM() {
     }
   }).catch(function (error) {
     let message = error.message;
-    errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message);
+    errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(),message,ErrorCollector.ERROR_CODE());
     console.log("Error getcontactscrm ", message);
   })
 }
@@ -50,7 +51,7 @@ async function postCompanies(postUrl,dataCompany){
      
   } catch (error) {
     let message = error.message;
-    errorCollector.add(currentLine, message);
+    errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("Este es el error al crear una compañia ", message);
     
   }
@@ -58,11 +59,13 @@ async function postCompanies(postUrl,dataCompany){
 }
 
 async function crearUnaEmpresa(empresa){
+
   let existelaCompania = await laEmpresaYaEstaEnElCRM(empresa[0]);
   console.log(existelaCompania);
   
   let dataPostCompaniasId = -1;
   if(!existelaCompania){
+    companiesFromCRM.push(empresa[0]) //agrega la empresa a companies from crm
     const urlPostCompany = `https://api.hubapi.com/companies/v2/companies?hapikey=${apikey}`;
     let dataCompany = {
       properties: [
@@ -91,7 +94,7 @@ async function crearUnaEmpresa(empresa){
       return dataPostCompaniasId;
     } catch(error) {
       console.log("Error al crear una compañia ", error.message);
-      errorCollector.add(currentLine, error.message);
+      errorCollector.add(currentLine, error.message, ErrorCollector.ERROR_CODE());
     }
   }
   return dataPostCompaniasId;
@@ -104,7 +107,7 @@ async function postContacts(postUrl,dataContacts){
      res = await axios.post(postUrl,dataContacts);
   } catch (error) {
     let message = error.message;
-    errorCollector.add(currentLine, message);
+    errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("ERROR AL CREAR UN CONTACTO ", message);
   }
   return res;
@@ -115,6 +118,7 @@ async function crearUnContacto(contacto){
   let idContactoCreado = -1;
   let existeElContacto =  await elContactoYaEstaEnElCRM(contacto[3]);
   if(!existeElContacto) {
+    contactsFromCRM.push(contacto[3]);
     const urlPostContact = `https://api.hubapi.com/contacts/v1/contact/?hapikey=${apikey}`
     let dataContacts = {
       properties: [
@@ -140,7 +144,7 @@ async function crearUnContacto(contacto){
     }
     catch(error) {
       console.log("error al crear un contacto: ", error.message);
-      errorCollector.add(currentLine, error.message);
+      errorCollector.add(currentLine, error.message, ErrorCollector.ERROR_CODE());
     };
   }
   return idContactoCreado;
@@ -212,7 +216,7 @@ async function putContactIntoCompany(urlUnionContactCompany,datacontactCompany){
      res = await axios.put(urlUnionContactCompany,datacontactCompany);
   } catch (error) {
     let message = error.message;
-    errorCollector.add(currentLine, message);
+    errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("Error al hacer la unión entre contacto y empresa", message);
   }
   return res;
@@ -252,6 +256,10 @@ async function postDeal(dataDeal){
      res = await axios.post(urlPostDeal,dataDeal);
     
   } catch (error) {
+     
+     let message = error.message;
+    
+    errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("Error al hacer la unión entre contacto y empresa", error.message);
     
   }
@@ -384,9 +392,6 @@ async function createTask(datosDelDeal, dealId){
   }
 }
 
-
- 
-
   responseCreateTask = await postCreateTask(dataCreateTask)
 
   return responseCreateTask;
@@ -404,6 +409,9 @@ async function postCreateTask(dataTask){
      res = await axios.post(urlPostCreateTask,dataTask);
     
   } catch (error) {
+
+    let message = error.message;
+    errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("Error al  crear una tarea", error.message);
     
   }
@@ -423,6 +431,8 @@ async function postCreateNote(dataNote){
      res = await axios.post(urlPostCreateNote,dataNote);
     
   } catch (error) {
+    let message = error.message;
+    errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("Error al crear una nota", error.message);
     
   }
@@ -441,7 +451,7 @@ async function postCreateNote(dataNote){
 
     idDeLaEmpresa =  await crearUnaEmpresa(empresa);
     if(idDeLaEmpresa == -1){
-      errorCollector.add(currentLine, "la compañia ya existe en el CRM");
+      errorCollector.add(currentLine, "la compañia ya existe en el CRM",ErrorCollector.ERROR_CODE());
       console.log("Este registro no se puede crear. Ya existe");
       continue;
     }
@@ -465,31 +475,47 @@ async function postCreateNote(dataNote){
     }
 
   }
-  console.log(typeof(String(errorCollector.toStringArray())))
-  errores = String(errorCollector.toStringArray());
-  console.log(errores);
   
+  return errorCollector.toStringArray();
+
 }
 
 async function main(file){
+  
+  companiesFromCRM = [];
+  contactsFromCRM = [];
+  errorCollector = new ErrorCollector();
+  currentLine = 1;
+  errores ="";
 
   let workbook = XLSX.read(file, {type: "buffer"});
   let first_sheet_name = workbook.SheetNames[0];
   let worksheet = workbook.Sheets[first_sheet_name];
   let dataJson = XLSX.utils.sheet_to_json(worksheet);
   await getDataFromCRM();
-  recorrerUnExcel(dataJson);
+  let erroresEncontrados = recorrerUnExcel(dataJson);
+  return erroresEncontrados;
 }
 //main();
+
+app.use(basicAuth({
+  users: { 'admin': '123' },
+  challenge: true,
+  realm: 'Imb4T3st4pp',
+}))
 
 app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname+'/public/index.html')); 
 });
 
  
-app.post('/upload', upload.single('file'), function (req, res, next) {
-   main(req.file.buffer);
-   res.send("Datos enviados satisfactoriamente");
+app.post('/upload', upload.single('file'), async function (req, res, next) {
+ 
+   
+  respuesta  = await main(req.file.buffer);
+  
+   
+  res.send(JSON.stringify(respuesta));
 })
 
 app.use(express.static(__dirname + '/public'));
