@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Técnico</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://kit-free.fontawesome.com/releases/latest/css/free-v4-shims.min.css" media="all" rel="stylesheet">
+    <link href="https://kit-free.fontawesome.com/releases/latest/css/free-v4-font-face.min.css" media="all" rel="stylesheet">
+    <link href="https://kit-free.fontawesome.com/releases/latest/css/free.min.css" media="all" rel="stylesheet">
+</head>
+<body>
+    <header class="container-fluid">
+        <div class="row">
+            <nav class="col-2 pagination">
+                <div class="page-item">
+                    <a class="page-link" href="./index.html" aria-label="Pagina principal">
+                        <i class="fas fa-arrow-circle-left"> Home</i>
+                    </a>
+                </div>
+            </nav>
+            <div class="col-10 mt-3">
+                <h1>Manual Técnico</h1>
+            </div>
+        </div>  
+    </header>
+    <main class="container">
+        <section class="row" >
+                <p class="col-12 text-justify"> Este es el manual técnico para la importación de <strong>Compañias</strong>,
+                    <strong>Contactos</strong> y <strong>Deals</strong>. Para tener el excel con los usuarios actualizados,
+                    descargar la plantilla en la pagina principal. A continuación se lista los pasos a seguir para hacer una importación.
+                </p>
+        </section>
+        <section>
+            <h2>Paso a paso</h2>
+            <ol>
+                <li>Descargar la plantilla de la pagina principal</li>
+                <li>
+                    <p>Una vez haya descargado la plantilla, llenar los campos correspondientes en la hoja <i>sheet 1</i> de la siguiente manera:</p>
+                    <ul>
+                        <li><p><b>NOMBRE EMPRESA</b> En este campo se indica el nombre de la empresa, este debe ser único, ya que si esta repetido no se incluira en el CRM,
+                            tampoco lo hará el contacto ni el deal</p></li>
+                        <li><p><b>PAGINA WEB</b> En este campo se indica la pagina web de la empresa</p></li>
+                        <li><p><b>INDUSTRIA</b> En este campo se indica la industria a la que pertenece la empresa, Hubspot recomienda unos tipos de industria que se encuentran
+                            en la hoja industria</p></li>
+                        <li><p><b>PAIS</b> En este campo se indica el prefijo del país donde se establece la empresa, es importante que este campo tenga una longitud menor o
+                            igual a tres para facilidad en la lectura</p></li>
+                        <li><p><b>PRIMER NOMBRE</b> En este campo se indica el primer nombre del contacto</p></li>
+                        <li><p><b>SEGUNDO NOMBRE</b> En este campo se indica el apellido del contacto</p></li>
+                        <li><p><b>TELEFÓNO DE CONTACTO</b> En este campo se indica el telefono del contacto, puede o no agregarse el indicativo del pais</p></li>
+                        <li><p><b>EMAIL CORPORATIVO</b> En este campo se indica el email corporativo del contacto, este debe ser unico para cada contacto, ya que si esta 
+                                repetido, el contacto no se incluira en el CRM y el deal se hará solamente con la empresa</p></li>
+                        <li><p><b>ETAPA</b> Esta es la etapa que estará el deal que se va a adicionar, siempre debe estar en PREQUALIFIED. tenga presente errores en tipeo porque
+                             puede generar errores en la importación</p></li>
+                        <li><p><b>VALOR DEAL</b> En este campo se indica el valor del deal, este debe ser de tipo númerico</p></li>
+                        <li><p><b>DEAL OWNER</b> En este campo se indica el primer nombre del usuario que va a quedar responsable del Deal</p></li>
+                        <li><p><b>DEAL OWNER ID</b> Este campo se llenará automaticamente y corresponde al id del usuario, por eso es importante no tener
+                            errores en el punto anterior, si hay algun problema con el llenado de este dato remitase a la hoja <i>Usuarios</i> del excel</p></li>
+                        <li><p><b>PRODUCTO</b> En este campo se indica el producto del deal. Este campo solo puede ser llenado con los siguientes valores: CG, CM o GEN</p></li>
+                        <li><p><b>NOTA</b> En este campo se puede agregar una nota al deal</p></li>
+                    </ul>
+                </li>
+                <li> Una vez completado el Excel, por favor dirigirse a la <a href="./index.html">pagina principal</a>, seleccione el archivo a subir (solo se permiten archivos excel) y envielo</li>
+                <li>Cuando se envia el archivo, el ssitema le responderá con los errores encontrados en el archivo y las estadisticas del mismo (Compañias creadas, Contactos creados y deals creados)</li>
+            </ol>
+        </section>
+    </main>
+</body>
+</html>
