@@ -4,6 +4,7 @@ const multer  = require('multer')
 const XLSX = require('xlsx')
 const axios = require('axios');
 const ErrorRecolector = require('./ErrorCollector.js');
+const Template = require('./Template.js');
 const app = express();
 const cors = require("cors");
 const bodyParser= require('body-parser');
@@ -27,7 +28,7 @@ async function getDataFromCRM() {
   }
   }).catch(function (error) {
     let message = error.message;
-    errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message);
+    errorCollector.add(ErrorCollector.SPECIAL_ERROR_LINE(), message, ErrorCollector.ERROR_CODE());
     console.log("getCompaniesCRM ", message);
   })
   
@@ -383,14 +384,8 @@ async function createTask(datosDelDeal, dealId){
     "status": "NOT_STARTED"
   }
 }
-
-
- 
-
   responseCreateTask = await postCreateTask(dataCreateTask)
-
   return responseCreateTask;
-  
 }
 
 
@@ -480,7 +475,6 @@ async function main(file){
   await getDataFromCRM();
   recorrerUnExcel(dataJson);
 }
-//main();
 
 app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname+'/public/index.html')); 
@@ -490,6 +484,19 @@ app.get('/', function (req, res) {
 app.post('/upload', upload.single('file'), function (req, res, next) {
    main(req.file.buffer);
    res.send("Datos enviados satisfactoriamente");
+})
+
+app.get('/template', async function(req, res) {
+  template = new Template('file.xlsx');
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader("Content-Disposition", "attachment; filename=" + 'template.xlsx');
+  let workbook = await template.inicializarTemplate();
+  if(workbook !== undefined) {
+    await workbook.xlsx.write(res);
+  } else {
+    res.send("ha ocurrido algún error");
+  }
+  res.end();
 })
 
 app.use(express.static(__dirname + '/public'));
