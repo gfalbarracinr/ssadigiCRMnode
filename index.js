@@ -11,7 +11,7 @@ const bodyParser= require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(cors());
 
-const apikey = `1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5`;
+const apikey = `22b4e662-5580-4547-bb80-b248d73cd10b`;
 var companiesFromCRM = [];
 var contactsFromCRM = [];
 const errorCollector = new ErrorRecolector();
@@ -472,6 +472,7 @@ async function main(file){
   let first_sheet_name = workbook.SheetNames[0];
   let worksheet = workbook.Sheets[first_sheet_name];
   let dataJson = XLSX.utils.sheet_to_json(worksheet);
+  console.log("este es el data json: ", dataJson)
   await getDataFromCRM();
   recorrerUnExcel(dataJson);
 }
@@ -487,7 +488,7 @@ app.post('/upload', upload.single('file'), function (req, res, next) {
 })
 
 app.get('/template', async function(req, res) {
-  template = new Template('file.xlsx');
+  template = new Template('template.xlsx', apikey);
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader("Content-Disposition", "attachment; filename=" + 'template.xlsx');
   let workbook = await template.inicializarTemplate();

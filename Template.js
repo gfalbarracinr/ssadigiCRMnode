@@ -3,7 +3,7 @@ const Excel = require('exceljs');
 class Template {
     constructor(file, apikey) {
         this.file = file;
-        this.apikey = '22b4e662-5580-4547-bb80-b248d73cd10b';
+        this.apikey = apikey;
     }
 
     async obtenerOwnersDeHubspot() {
@@ -30,7 +30,7 @@ class Template {
 
         try {
             const workbook = new Excel.Workbook();
-            await workbook.xlsx.readFile('template.xlsx');
+            await workbook.xlsx.readFile(this.file);
             const worksheet = workbook.getWorksheet('Usuarios');
             ownerData.map(row => {
                 let createArray = [row.ownerId, row.firstName, row.lastName, row.email]
