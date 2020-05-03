@@ -62,9 +62,10 @@ async function crearUnaEmpresa(empresa){
 
   let existelaCompania = await laEmpresaYaEstaEnElCRM(empresa[0]);
   console.log(existelaCompania);
-  
   let dataPostCompaniasId = -1;
+
   if(!existelaCompania){
+    numCompanias = numCompanias + 1
     companiesFromCRM.push(empresa[0]) //agrega la empresa a companies from crm
     const urlPostCompany = `https://api.hubapi.com/companies/v2/companies?hapikey=${apikey}`;
     let dataCompany = {
@@ -417,7 +418,7 @@ async function postCreateTask(dataTask){
   }
 
   return res;
-
+  
 }
 
 
@@ -476,6 +477,8 @@ async function postCreateNote(dataNote){
 
   }
   
+  console.log("Errores linea 479: ",errorCollector.toStringArray());
+  
   return errorCollector.toStringArray();
 
 }
@@ -487,6 +490,7 @@ async function main(file){
   errorCollector = new ErrorCollector();
   currentLine = 1;
   errores ="";
+  numCompanias = 0
 
   let workbook = XLSX.read(file, {type: "buffer"});
   let first_sheet_name = workbook.SheetNames[0];
@@ -513,9 +517,13 @@ app.post('/upload', upload.single('file'), async function (req, res, next) {
  
    
   respuesta  = await main(req.file.buffer);
+  let arregloRespuesta = []
   
+  arregloRespuesta.push(numCompanias);
+  arregloRespuesta.push(respuesta);
+
    
-  res.send(JSON.stringify(respuesta));
+  res.send(arregloRespuesta);
 })
 
 app.use(express.static(__dirname + '/public'));

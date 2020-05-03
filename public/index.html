@@ -6,6 +6,10 @@
     <link rel="stylesheet" type="text/css" href="./index.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script  type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+   
+ 
+
     <title>ssadigi import data</title>
     
 </head>
@@ -16,43 +20,93 @@
         <div class="card-body">
             <img class="card-img-top" src="./ssadigi.png" alt="ssadigi logo">
           <div>
-            <input class=" btn btn-light mt-2 mb-3" type="file" id="idData" accept=".xls, .xlsx" name="file" />
-            <button class="btnEnviar" onclick="senData(event)">enviar</button>
-          </div>
-          <p class="card-text mt-5">Aquí irán algunos errores</p>
+            <input  class=" btn btn-light mt-2 mb-3" id="inputFile" type="file" accept=".xls, .xlsx" name="file" />
+            <button  id="miBoton" class="btnEnviar" onclick="senData(event)">enviar</button>
+           </div>  
+          
+           <div class="wrap mt-3">
+
+             <h4 class="parrafo1"></h4>
+             <h4 class="parrafo2"></h4>
+             <h4 class="parrafo3"></h4>
+           </div>
+           <h5 class="numCompanies"></h5>
+          <div class="consolaErrores" id="addHere"></div>
         </div>
     </div>
 
     <script>
+   
+       async function senData(e){
 
-      function senData(e){
+         
+        var imgVal = $('#inputFile').val(); 
+        if(imgVal=='') 
+        { 
+            alert("Please, upload a file of excel"); 
 
-        e.preventDefault();
+        } 
+       else
+         {
+           
+ 
+        $('#miBoton').attr("disabled", true);
 
         console.log("Entré al sendata");
         
-        const selectedFile = document.getElementById('idData').files[0];
+        const selectedFile = document.getElementById('inputFile').files[0];
         
 
         var formData = new FormData();
         formData.append("file", selectedFile);
-        axios.post('/upload', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
+        var llegoRespuesta = false;
+        try {
+          
+          $('.parrafo1').html( "enviando datos...");
+          response = await axios.post('/upload', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+  
+          })}catch (error) {
+
+              $('.parrafo1').html( "");
+              $('.parrafo3').html( "The data has not been sent");
+              console.log("error  al recibir  response desde el back");
+              
+            } 
+            if(response.status == 200){
+              
+              $('.parrafo1').html( "");
+              $('.parrafo2').html( "Data sent!");
+
             }
-        })
-        .then(function (response) {
-            //handle success
-            console.log(response);
-        })
-        .catch(function (response) {
-            //handle error
-            console.log(response);
-        });
+            
+            $('#miBoton').attr("disabled", false);
+
+          
+              //Aqui todo el codigo que tienes
+              var htmlElements = "";
+              var bufferDatos =  Object.keys(response.data).length
+              console.log("num empresas: ",response.data[0]);
+              $('.numCompanies').html("Number of registered companies: "+response.data[0]);
+              for(const prop in response.data[1]){
+                console.log(response.data[1][prop].message);
+                
+                newH1 = document.createElement('p');
+                newH1.setAttribute("id", "errorP"+prop);
+               var addHere = document.getElementById('addHere');
+               addHere.appendChild(newH1);
+               document.getElementById('errorP'+prop).innerHTML = response.data[1][prop].message;
+               
+              }
+
+         }
+
       }
 
     </script>
  
-
+  
 </body>
 </html>
