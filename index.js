@@ -490,7 +490,7 @@ async function main(file){
   let erroresEncontrados = recorrerUnExcel(dataJson);
   return erroresEncontrados;
 }
-
+app.use(express.static('public'));
 app.use(basicAuth({
   users: { 'admin': 'ssadigiCRM' },
   challenge: true,
@@ -498,7 +498,7 @@ app.use(basicAuth({
 }))
 
 app.get('/', function (req, res) {
-  res.sendFile(path.join('public/index.html')); 
+  res.sendFile(path.join('index.html')); 
 });
 
  
