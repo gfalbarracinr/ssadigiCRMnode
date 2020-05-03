@@ -43,7 +43,7 @@ async function postCompanies(postUrl,dataCompany){
   let res = {};
   try {
     res = await axios.post(postUrl, dataCompany);
-     
+    numCompanias++;
   } catch (error) {
     let message = error.message;
     errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
@@ -56,11 +56,9 @@ async function postCompanies(postUrl,dataCompany){
 async function crearUnaEmpresa(empresa){
 
   let existelaCompania = await laEmpresaYaEstaEnElCRM(empresa[0]);
-  console.log(existelaCompania);
   let dataPostCompaniasId = -1;
 
   if(!existelaCompania){
-    numCompanias = numCompanias + 1
     companiesFromCRM.push(empresa[0]) //agrega la empresa a companies from crm
     const urlPostCompany = `https://api.hubapi.com/companies/v2/companies?hapikey=${apikey}`;
     let dataCompany = {
@@ -137,6 +135,7 @@ async function crearUnContacto(contacto){
     try {
       let dataPostContacts  = await postContacts(urlPostContact, dataContacts);
       idContactoCreado = dataPostContacts.data.vid;
+      numContactos++;
     }
     catch(error) {
       console.log("error al crear un contacto: ", error.message);
@@ -250,7 +249,7 @@ async function postDeal(dataDeal){
   try {
     
      res = await axios.post(urlPostDeal,dataDeal);
-    
+     numDeals++;
   } catch (error) {
      
      let message = error.message;
@@ -459,7 +458,7 @@ async function postCreateNote(dataNote){
       let responseCreateTask = await createTask(datosDelDeal, dealId); 
       
     } else {
-      errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto a introducir");
+      errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto a introducir", ErrorCollector.WARNING_CODE());
       let rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0],datosDelDeal);
       let dealId = rtaDeal.data.dealId;
       let responseCreateANote = await createNote(datosDelDeal, dealId);
@@ -468,9 +467,6 @@ async function postCreateNote(dataNote){
     }
 
   }
-  
-  console.log("Errores linea 479: ",errorCollector.toStringArray());
-  
   return errorCollector.toStringArray();
 
 }
@@ -482,13 +478,14 @@ async function main(file){
   errorCollector = new ErrorCollector();
   currentLine = 1;
   errores ="";
-  numCompanias = 0
+  numCompanias = 0;
+  numContactos = 0;
+  numDeals = 0;
 
   let workbook = XLSX.read(file, {type: "buffer"});
   let first_sheet_name = workbook.SheetNames[0];
   let worksheet = workbook.Sheets[first_sheet_name];
   let dataJson = XLSX.utils.sheet_to_json(worksheet);
-  console.log("este es el data json: ", dataJson)
   await getDataFromCRM();
   let erroresEncontrados = recorrerUnExcel(dataJson);
   return erroresEncontrados;
@@ -507,14 +504,12 @@ app.get('/', function (req, res) {
  
 app.post('/upload', upload.single('file'), async function (req, res, next) {
  
-   
   respuesta  = await main(req.file.buffer);
   let arregloRespuesta = []
-  
   arregloRespuesta.push(numCompanias);
+  arregloRespuesta.push(numContactos);
+  arregloRespuesta.push(numDeals);
   arregloRespuesta.push(respuesta);
-
-   
   res.send(arregloRespuesta);
 })
 

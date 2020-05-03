@@ -32,6 +32,8 @@
             <h4 class="parrafo3"></h4>
           </div>
           <h5 class="numCompanies"></h5>
+          <h5 class="numContacts"></h5>
+          <h5 class="numDeals"></h5>
           <div class="consolaErrores" id="addHere"></div>
         </div>
         <a class="text-left ml-3" href="./instructions.html">Manual Técnico</a>
@@ -90,16 +92,21 @@
               //Aqui todo el codigo que tienes
               var htmlElements = "";
               var bufferDatos =  Object.keys(response.data).length
-              console.log("num empresas: ",response.data[0]);
-              $('.numCompanies').html("Number of registered companies: "+response.data[0]);
-              for(const prop in response.data[1]){
-                console.log(response.data[1][prop].message);
+              let empresasCreadas = response.data[0];
+              let contactosCreados = response.data[1];
+              let dealsCreados = response.data[2];
+              $('.numCompanies').html("Number of companies imported: " + empresasCreadas);
+              $('.numContacts').html("Number of contacts imported: " + contactosCreados);
+              $('.numDeals').html("Number of deals imported: " + dealsCreados);
+              let errores = response.data.pop();
+              for(const prop in errores){
+                console.log(errores[prop].message);
                 
                 newH1 = document.createElement('p');
                 newH1.setAttribute("id", "errorP"+prop);
                var addHere = document.getElementById('addHere');
                addHere.appendChild(newH1);
-               document.getElementById('errorP'+prop).innerHTML = response.data[1][prop].message;
+               document.getElementById('errorP'+prop).innerHTML = errores[prop].message;
                
               }
 
