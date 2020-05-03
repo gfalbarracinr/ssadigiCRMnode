@@ -21,7 +21,7 @@
             <img class="card-img-top" src="./ssadigi.png" alt="ssadigi logo">
           <div>
             <input  class=" btn btn-light mt-2 mb-3" id="inputFile" type="file" accept=".xls, .xlsx" name="file" />
-            <button  id="miBoton" class="btnEnviar" onclick="senData(event)">enviar</button>
+            <button  id="miBoton" class="btnEnviar" onclick="senData(event)">SEND</button>
           </div>  
           <form action="/template" method="GET">
             <input class="mt-5"type="submit" value="Descargar Plantilla"/>
@@ -32,12 +32,15 @@
             <h4 class="parrafo3"></h4>
           </div>
           <h5 class="numCompanies"></h5>
-          <h5 class="numContacts"></h5>
-          <h5 class="numDeals"></h5>
-          <div class="consolaErrores" id="addHere"></div>
         </div>
         <a class="text-left ml-3" href="./instructions.html">Manual Técnico</a>
-    </div>
+      </div>
+      
+      <div class="card mx-auto" style="width: 600px">
+     
+        <div class="consolaErrores" id="addHere"></div>
+           
+      </div>
 
     <script>
    
@@ -92,24 +95,48 @@
               //Aqui todo el codigo que tienes
               var htmlElements = "";
               var bufferDatos =  Object.keys(response.data).length
-              let empresasCreadas = response.data[0];
-              let contactosCreados = response.data[1];
-              let dealsCreados = response.data[2];
-              $('.numCompanies').html("Number of companies imported: " + empresasCreadas);
-              $('.numContacts').html("Number of contacts imported: " + contactosCreados);
-              $('.numDeals').html("Number of deals imported: " + dealsCreados);
-              let errores = response.data.pop();
-              for(const prop in errores){
-                console.log(errores[prop].message);
+              console.log("Datos desde node: ",response.data[1]);
+
+              $('.numCompanies').html("Number of registered companies: "+response.data[0]);
+              for(const prop in response.data[1]){
+                console.log("este es el mensaje: ",response.data[1][prop].message);
                 
                 newH1 = document.createElement('p');
                 newH1.setAttribute("id", "errorP"+prop);
                var addHere = document.getElementById('addHere');
                addHere.appendChild(newH1);
-               document.getElementById('errorP'+prop).innerHTML = errores[prop].message;
+               addHere.style.overflow = "scroll";
+
+               if(response.data[1][prop].message !=  ""){
+
+                if(response.data[1][prop].code == 0){ // warning  message
+                 
+                  var styleColor = document.getElementById('errorP'+prop);
+                  styleColor.style.color = "orange";
+                 
+                  document.getElementById('errorP'+prop).innerHTML = "Line: "+ prop +" "+ response.data[1][prop].message;
+                }
+
+                if(response.data[1][prop].code == 1){ // error message
+                  console.log("nota desde el front");
+                  
+                  var styleColor = document.getElementById('errorP'+prop);
+                  styleColor.style.color = "red";
+                 
+                  document.getElementById('errorP'+prop).innerHTML = "Line: "+ prop +" "+ response.data[1][prop].message;
+                }
+                 
+                 
+               }
+               
               }
+
          }
+
       }
+
     </script>
+ 
+  
 </body>
 </html>

@@ -12,7 +12,7 @@ const bodyParser= require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(cors());
 
-const apikey = `22b4e662-5580-4547-bb80-b248d73cd10b`;
+const apikey = `1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5`;
 var upload = multer()
 
 async function getDataFromCRM() {
@@ -161,6 +161,9 @@ async function getContactsCRM(){
 }
 
 async function elContactoYaEstaEnElCRM(contacto){
+
+  //console.log("este es el arreglo en donde algo debe estar mal: ", {contacto: contacto, contactsFromCRM: contactsFromCRM});
+
   if (contacto === 'undefined'){
    return true;
   }
@@ -331,6 +334,8 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
 }
 
 async function createNote(datosDelDeal, dealId){
+
+   
   let dataCreateNote ={
     "engagement": {
         "active": true,
@@ -346,11 +351,13 @@ async function createNote(datosDelDeal, dealId){
     "metadata": {
         "body": datosDelDeal[4]
     }
-  }
+}
+
   if(datosDelDeal[4] !== 'undefined'){
     responseCreateNote = await postCreateNote(dataCreateNote)
     return responseCreateNote;
   }else{
+    console.log("la nota es indefinida");
     return -1
   }
   
@@ -456,6 +463,7 @@ async function postCreateNote(dataNote){
     let dealId = rtaDeal.data.dealId;
     let responseCreateANote = await createNote(datosDelDeal, dealId);
     let responseCreateTask = await createTask(datosDelDeal, dealId);
+    console.log("respuesta a nota: ", responseCreateANote);
     if(responseCreateANote == -1){
       errorCollector.add(currentLine, "Empty note", ErrorCollector.WARNING_CODE())
     }
@@ -495,14 +503,17 @@ app.get('/', function (req, res) {
 });
 
  
+ 
 app.post('/upload', upload.single('file'), async function (req, res, next) {
  
+   
   respuesta  = await main(req.file.buffer);
   let arregloRespuesta = []
+  
   arregloRespuesta.push(numCompanias);
-  arregloRespuesta.push(numContactos);
-  arregloRespuesta.push(numDeals);
   arregloRespuesta.push(respuesta);
+
+   
   res.send(arregloRespuesta);
 })
 

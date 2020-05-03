@@ -1,5 +1,5 @@
 body{
-  background-image: url(./background.jpg);
+  background-image: url(./glassBG.jpg);
   background-repeat: no-repeat;
   background-size: 100% 100% !important;
   background-attachment: fixed;
@@ -9,16 +9,17 @@ body{
 .card{
 
   display: block;
-  margin-top: 50px; 
   text-align: center;
   border-radius: 12px !important;
+  margin-top: 10px;
 }
  
 .consolaErrores{
   
-  background-color: #C0C0C0;
+  max-height: 400px;
+  background-color: white;
   text-align: left;
- 
+  padding-left: 10px;
 
 }
 .textArea{
@@ -28,7 +29,7 @@ body{
 
 .btnEnviar{
   
-  background-color: #3CA241; /* Green */
+  background-color: #0779E4; /* Green */
   border: none;
   color: white;
   padding: 15px 15px;
@@ -47,7 +48,7 @@ body{
 
 .btnEnviar:hover {
 
-  background-color: #03743B; /* Green */
+  background-color: #27496D; /* Green */
   color: white;
 }
 
