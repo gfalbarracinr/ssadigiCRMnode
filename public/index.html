@@ -32,6 +32,8 @@
             <h4 class="parrafo3"></h4>
           </div>
           <h5 class="numCompanies"></h5>
+          <h5 class="numContacts"></h5>
+          <h5 class="numDeals"></h5>
         </div>
         <a class="text-left ml-3" href="./instructions.html">Manual Técnico</a>
       </div>
@@ -95,11 +97,15 @@
               //Aqui todo el codigo que tienes
               var htmlElements = "";
               var bufferDatos =  Object.keys(response.data).length
-              console.log("Datos desde node: ",response.data[1]);
-
-              $('.numCompanies').html("Number of registered companies: "+response.data[0]);
-              for(const prop in response.data[1]){
-                console.log("este es el mensaje: ",response.data[1][prop].message);
+              let empresasCreadas = response.data[0];
+              let contactosCreados = response.data[1];
+              let dealsCreados = response.data[2];
+              $('.numCompanies').html("Number of companies imported: " + empresasCreadas);
+              $('.numContacts').html("Number of contacts imported: " + contactosCreados);
+              $('.numDeals').html("Number of deals imported: " + dealsCreados);
+              let errores = response.data.pop();
+              for(const prop in errores){
+                console.log("este es el mensaje: ",errores[prop].message);
                 
                 newH1 = document.createElement('p');
                 newH1.setAttribute("id", "errorP"+prop);
@@ -107,23 +113,23 @@
                addHere.appendChild(newH1);
                addHere.style.overflow = "scroll";
 
-               if(response.data[1][prop].message !=  ""){
+               if(errores[prop].message !=  ""){
 
-                if(response.data[1][prop].code == 0){ // warning  message
+                if(errores[prop].code == 0){ // warning  message
                  
                   var styleColor = document.getElementById('errorP'+prop);
                   styleColor.style.color = "orange";
                  
-                  document.getElementById('errorP'+prop).innerHTML = "Line: "+ prop +" "+ response.data[1][prop].message;
+                  document.getElementById('errorP'+prop).innerHTML = "Line: "+ prop +" "+ errores[prop].message;
                 }
 
-                if(response.data[1][prop].code == 1){ // error message
+                if(errores[prop].code == 1){ // error message
                   console.log("nota desde el front");
                   
                   var styleColor = document.getElementById('errorP'+prop);
                   styleColor.style.color = "red";
                  
-                  document.getElementById('errorP'+prop).innerHTML = "Line: "+ prop +" "+ response.data[1][prop].message;
+                  document.getElementById('errorP'+prop).innerHTML = "Line: "+ prop +" "+ errores[prop].message;
                 }
                  
                  

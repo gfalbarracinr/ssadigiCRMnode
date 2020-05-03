@@ -12,7 +12,7 @@ const bodyParser= require('body-parser');
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(cors());
 
-const apikey = `1c76d9a3-4161-4cc3-a2d3-b30a4c6747b5`;
+const apikey = `22b4e662-5580-4547-bb80-b248d73cd10b`;
 var upload = multer()
 
 async function getDataFromCRM() {
@@ -53,7 +53,7 @@ async function postCompanies(postUrl,dataCompany){
 }
 
 async function crearUnaEmpresa(empresa){
-
+  if (empresa[0] === 'undefined') return -1;
   let existelaCompania = await laEmpresaYaEstaEnElCRM(empresa[0]);
   let dataPostCompaniasId = -1;
 
@@ -243,19 +243,14 @@ async function asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto)
 async function postDeal(dataDeal){
 
   const urlPostDeal = `https://api.hubapi.com/deals/v1/deal?hapikey=${apikey}`
-    
-  let res = {};
+  let res = undefined;
   try {
-    
      res = await axios.post(urlPostDeal,dataDeal);
      numDeals++;
   } catch (error) {
-     
-     let message = error.message;
-    
+    let message = error.message;
     errorCollector.add(currentLine, message, ErrorCollector.ERROR_CODE());
     console.log("Error al hacer la unión entre contacto y empresa", error.message);
-    
   }
 
   return res;
@@ -446,13 +441,14 @@ async function postCreateNote(dataNote){
 
     idDeLaEmpresa =  await crearUnaEmpresa(empresa);
     if(idDeLaEmpresa == -1){
-      errorCollector.add(currentLine, "la compañia ya existe en el CRM",ErrorCollector.ERROR_CODE());
+      errorCollector.add(currentLine, "El registro es invalido o la compañia ya existe en el CRM",ErrorCollector.ERROR_CODE());
       console.log("Este registro no se puede crear. Ya existe");
       continue;
     }
     contacto = await obtenerContactoDeUnaFila(element);
     idDelContacto =  await crearUnContacto(contacto);
     let rtaDeal = null ;
+    let responseCreateANote = 0;
     if(idDelContacto !== -1) {
       let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
       rtaDeal = await crearDealConContacto(idDeLaEmpresa, idDelContacto, empresa[0],datosDelDeal);   
@@ -460,10 +456,13 @@ async function postCreateNote(dataNote){
       errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto a introducir", ErrorCollector.WARNING_CODE());
       rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0],datosDelDeal);
     }
-    let dealId = rtaDeal.data.dealId;
-    let responseCreateANote = await createNote(datosDelDeal, dealId);
-    let responseCreateTask = await createTask(datosDelDeal, dealId);
-    console.log("respuesta a nota: ", responseCreateANote);
+    if(rtaDeal !== undefined) {
+      let dealId = rtaDeal.data.dealId;
+      responseCreateANote = await createNote(datosDelDeal, dealId);
+      let responseCreateTask = await createTask(datosDelDeal, dealId);
+    } else {
+      errorCollector.add(currentLine, "Owner ID is empty", ErrorCollector.ERROR_CODE())
+    }
     if(responseCreateANote == -1){
       errorCollector.add(currentLine, "Empty note", ErrorCollector.WARNING_CODE())
     }
@@ -493,7 +492,7 @@ async function main(file){
 }
 
 app.use(basicAuth({
-  users: { 'admin': '123' },
+  users: { 'admin': 'ssadigiCRM' },
   challenge: true,
   realm: 'Imb4T3st4pp',
 }))
@@ -509,11 +508,10 @@ app.post('/upload', upload.single('file'), async function (req, res, next) {
    
   respuesta  = await main(req.file.buffer);
   let arregloRespuesta = []
-  
   arregloRespuesta.push(numCompanias);
+  arregloRespuesta.push(numContactos);
+  arregloRespuesta.push(numDeals);
   arregloRespuesta.push(respuesta);
-
-   
   res.send(arregloRespuesta);
 })
 
