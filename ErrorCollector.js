@@ -2,28 +2,49 @@ class ErrorCollector {
     constructor() {
         this.collector = {}
         this.SPECIAL_ERROR_LINE = 0;
+        this.ERROR_CODE = 1;
+        this.WARNING_CODE = 0;
         this.currentLine = 0;
-        this.collector[this.SPECIAL_ERROR_LINE] = '';
+        this.collector[this.SPECIAL_ERROR_LINE] = {
+            message: '',
+            code: 1
+        };
     }
 
-    add(line, error) {
+    add(line, error, code) {
+        
         if (line === this.SPECIAL_ERROR_LINE) {
-            this.collector[line] += `${error}\n`;
+            this.collector[line][message] += `${error}\n`;
         }else if(!this.collector.hasOwnProperty(line)) {
-            this.collector[line] = error;
-        } 
+            this.collector[line] = {
+                message: error,
+                code: code
+            }
+        } else {
+
+            this.collector[line].message += error;
+            
+            if (code > this.collector[line][code]) {
+                this.collector[line][code] = code;
+            }
+        }
     }
 
-    static get SPECIAL_ERROR_LINE () {
+    static  SPECIAL_ERROR_LINE () {
         return this.SPECIAL_ERROR_LINE; 
     }
+
+    static  ERROR_CODE () {
+        
+        return 1; 
+    }
+
+    static  WARNING_CODE () {
+        return 0; 
+    }
+
     toStringArray() {
-      let stringMessages = [];
-      const lines = Object.keys(this.collector);
-      lines.map((line) => {
-          stringMessages.push(`Error en la fila ${line}: ${this.collector[line]}`);
-      });
-      return stringMessages;
+      return this.collector;
     }
 }
 module.exports = ErrorCollector;

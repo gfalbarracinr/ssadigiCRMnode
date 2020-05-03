@@ -14,6 +14,13 @@ body{
   border-radius: 12px !important;
 }
  
+.consolaErrores{
+  
+  background-color: #C0C0C0;
+  text-align: left;
+ 
+
+}
 .textArea{
   margin-top: 20px;
   width: 350px;
@@ -44,6 +51,20 @@ body{
   color: white;
 }
 
+ p{
+   font-family: monospace;
+ }
+ 
+
 .card-img-top{
   width: 250px !important;
+  }
+  .parrafo1{
+    color: blue;
+  }
+  .parrafo2{
+    color: green;
+  }
+  .parrafo3{
+    color: red;
   }
