@@ -12,34 +12,31 @@ class ErrorCollector {
     }
 
     add(line, error, code) {
-        
         if (line === this.SPECIAL_ERROR_LINE) {
             this.collector[line][message] += `${error}\n`;
         }else if(!this.collector.hasOwnProperty(line)) {
             this.collector[line] = {
-                message: error,
+                message: `${error}\n`,
                 code: code
             }
         } else {
-
-            this.collector[line].message += error;
-            
-            if (code > this.collector[line][code]) {
-                this.collector[line][code] = code;
-            }
+            this.collector[line].message += `${error}\n`;
+            if (code > this.collector[line].code) {
+                this.collector[line].code = code;
+            }   
         }
     }
 
-    static  SPECIAL_ERROR_LINE () {
+    static SPECIAL_ERROR_LINE () {
         return this.SPECIAL_ERROR_LINE; 
     }
 
-    static  ERROR_CODE () {
+    static ERROR_CODE () {
         
         return 1; 
     }
 
-    static  WARNING_CODE () {
+    static WARNING_CODE () {
         return 0; 
     }
 

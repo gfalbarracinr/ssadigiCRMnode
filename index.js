@@ -38,7 +38,6 @@ async function getDataFromCRM() {
   })
 }
 
-
 async function postCompanies(postUrl,dataCompany){
   let res = {};
   try {
@@ -162,9 +161,6 @@ async function getContactsCRM(){
 }
 
 async function elContactoYaEstaEnElCRM(contacto){
-
-  //console.log("este es el arreglo en donde algo debe estar mal: ", {contacto: contacto, contactsFromCRM: contactsFromCRM});
-
   if (contacto === 'undefined'){
    return true;
   }
@@ -335,8 +331,6 @@ async function crearDealConContacto(idDeLaEmpresa, idContactoDeal, empresa,datos
 }
 
 async function createNote(datosDelDeal, dealId){
-
-   
   let dataCreateNote ={
     "engagement": {
         "active": true,
@@ -352,11 +346,13 @@ async function createNote(datosDelDeal, dealId){
     "metadata": {
         "body": datosDelDeal[4]
     }
-}
-
-  responseCreateNote = await postCreateNote(dataCreateNote)
-
-  return responseCreateNote;
+  }
+  if(datosDelDeal[4] !== 'undefined'){
+    responseCreateNote = await postCreateNote(dataCreateNote)
+    return responseCreateNote;
+  }else{
+    return -1
+  }
   
 }
 
@@ -449,23 +445,20 @@ async function postCreateNote(dataNote){
     }
     contacto = await obtenerContactoDeUnaFila(element);
     idDelContacto =  await crearUnContacto(contacto);
-
+    let rtaDeal = null ;
     if(idDelContacto !== -1) {
       let respuestaAsociacion = await asociacionEntreLaEmpresaYElContacto(idDeLaEmpresa, idDelContacto);
-      let rtaDeal = await crearDealConContacto(idDeLaEmpresa, idDelContacto, empresa[0],datosDelDeal);
-      let dealId = rtaDeal.data.dealId;
-      let responseCreateANote = await createNote(datosDelDeal, dealId);      
-      let responseCreateTask = await createTask(datosDelDeal, dealId); 
-      
+      rtaDeal = await crearDealConContacto(idDeLaEmpresa, idDelContacto, empresa[0],datosDelDeal);   
     } else {
       errorCollector.add(currentLine, "El contacto ya existe en el CRM o no hay contacto a introducir", ErrorCollector.WARNING_CODE());
-      let rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0],datosDelDeal);
-      let dealId = rtaDeal.data.dealId;
-      let responseCreateANote = await createNote(datosDelDeal, dealId);
-      let responseCreateTask = await createTask(datosDelDeal, dealId); 
-        
+      rtaDeal = await crearDealSinContacto(idDeLaEmpresa, empresa[0],datosDelDeal);
     }
-
+    let dealId = rtaDeal.data.dealId;
+    let responseCreateANote = await createNote(datosDelDeal, dealId);
+    let responseCreateTask = await createTask(datosDelDeal, dealId);
+    if(responseCreateANote == -1){
+      errorCollector.add(currentLine, "Empty note", ErrorCollector.WARNING_CODE())
+    }
   }
   return errorCollector.toStringArray();
 
