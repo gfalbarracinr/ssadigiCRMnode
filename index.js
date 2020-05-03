@@ -528,8 +528,6 @@ app.get('/template', async function(req, res) {
   res.end();
 })
 
-app.use(express.static(__dirname + '/public'));
-
 app.listen(4000, function () {
   console.log('Example app listening on port 4000!');
 });
